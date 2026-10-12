@@ -28,8 +28,8 @@ node ~/.claude/skills/cds-erd/scripts/csn2erd.js <model.cds ...> [--only <prefix
 
 | Flag | Meaning |
 |------|---------|
-| `--to drawio` | Emit a positioned `.drawio` directly (built-in layered + barycenter layout, no Graphviz). **Recommended.** |
-| `--to json` *(default)* | Emit graph JSON for a Graphviz autolayout step when you want `dot`-grade layout. |
+| `--to drawio` | Write a ready-to-open diagram directly, arranged by the built-in layout. **Recommended — needs nothing extra.** |
+| `--to json` *(default)* | Write the raw diagram data as JSON instead, so a separate tool can arrange it. Only needed for the optional tidier-layout path described below. |
 | `--only <prefix>` | Render only entities under a namespace (e.g. `sap.capire.travels`); association targets outside become dashed external stubs. |
 | `-o <file>` | Write to a file instead of stdout. |
 
@@ -43,14 +43,16 @@ node ~/.claude/skills/cds-erd/scripts/csn2erd.js db/schema.cds --only sap.capire
 # -> 11 entities, 10 relationships (drawio)
 ```
 
-## Choosing the layout path (coexistence with the drawio skill)
+## How tidy is the diagram?
 
-This skill is **standalone** — the script never calls another skill. But it has two outputs, and the better one depends on what else is installed:
+`cds-erd` always produces a complete, editable diagram by itself — you never *need* anything else installed. The only thing that varies is how neatly the boxes are arranged for you:
 
-- **If a draw.io skill with `autolayout.py` is installed AND Graphviz `dot` is on PATH** → run `--to json`, then hand the graph JSON to that skill's `autolayout.py` for `dot`-grade layout (and its validation/export if available). Check with `command -v dot` and `ls ~/.claude/skills/*/scripts/autolayout.py`.
-- **Otherwise** → use `--to drawio` (built-in Node layout, zero extra deps).
+- **On its own (`--to drawio`):** a simple built-in arrangement. Perfectly usable, but on busier models some connector lines may cross. Think of it as a good first draft — open it in draw.io and nudge a few boxes if you want it perfect.
+- **With the companion draw.io skill (`--to json`):** if you also have the [draw.io skill by Agents365-ai](https://github.com/Agents365-ai/drawio-skill) installed, plus **Graphviz** — a free, widely used tool that arranges diagrams automatically ([graphviz.org](https://graphviz.org)) — the boxes come out noticeably tidier with no manual nudging.
 
-This is an orchestration choice, not a code dependency: `cds-erd` produces a complete `.drawio` on its own, and simply upgrades to Graphviz layout when those tools happen to be present.
+**You don't have to choose.** When you run `cds-erd` through Claude Code, it looks for that draw.io skill and Graphviz; if both are present it automatically switches to `--to json` and hands the diagram over for the tidier layout, otherwise it arranges the diagram itself. Either way you end up with a finished, editable diagram.
+
+To check whether Graphviz is already on your machine, run `dot -V` in a terminal (`dot` is Graphviz's command). If it prints a version, you have it. On a Mac, install it with `brew install graphviz`. If you'd rather not bother, the built-in arrangement is always there.
 
 ## What it captures
 
@@ -63,9 +65,6 @@ This is an orchestration choice, not a code dependency: `cds-erd` produces a com
 
 ## Dependencies
 
-- **Node** + **`@sap/cds`** — run inside a CAP project.
-- *Optional:* [draw.io](https://www.drawio.com/) desktop/CLI for PNG/SVG/PDF export and a final libavoid reroute; Graphviz `dot` only for the `--to json` autolayout path.
-
-## Note on layout
-
-The built-in layered layout is a good **draft** — it orders nodes (barycenter crossing-reduction) but does not route edges. For a print-perfect result, open the `.drawio` in draw.io desktop (libavoid reroute) or use the Graphviz `--to json` path.
+- **Node** + **`@sap/cds`** — run inside a CAP project. That's all you need.
+- *Optional, for the tidier layout:* the [draw.io skill by Agents365-ai](https://github.com/Agents365-ai/drawio-skill) + [Graphviz](https://graphviz.org). `cds-erd` hands off to them automatically when both are present.
+- *Optional, to view/export:* [draw.io](https://www.drawio.com/) to open the diagram and export PNG, SVG, or PDF.
