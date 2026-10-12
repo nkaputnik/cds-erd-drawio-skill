@@ -43,6 +43,15 @@ node ~/.claude/skills/cds-erd/scripts/csn2erd.js db/schema.cds --only sap.capire
 # -> 11 entities, 10 relationships (drawio)
 ```
 
+## Choosing the layout path (coexistence with the drawio skill)
+
+This skill is **standalone** — the script never calls another skill. But it has two outputs, and the better one depends on what else is installed:
+
+- **If a draw.io skill with `autolayout.py` is installed AND Graphviz `dot` is on PATH** → run `--to json`, then hand the graph JSON to that skill's `autolayout.py` for `dot`-grade layout (and its validation/export if available). Check with `command -v dot` and `ls ~/.claude/skills/*/scripts/autolayout.py`.
+- **Otherwise** → use `--to drawio` (built-in Node layout, zero extra deps).
+
+This is an orchestration choice, not a code dependency: `cds-erd` produces a complete `.drawio` on its own, and simply upgrades to Graphviz layout when those tools happen to be present.
+
 ## What it captures
 
 - `key` → PK rows; scalar elements → typed columns (managed `createdAt`/`createdBy`/… filtered out).

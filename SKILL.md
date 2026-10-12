@@ -30,6 +30,15 @@ node scripts/csn2erd.js <model.cds ...> [--only <prefix>] [--to json|drawio] [-o
 
 Run `node scripts/csn2erd.js` with no args for usage.
 
+## Choosing the layout path
+
+The script is self-contained and never calls another skill. Pick the output before generating:
+
+- **If the `drawio-skill` is installed AND Graphviz `dot` is on PATH** → run `--to json`, then hand the graph JSON to the `drawio-skill`'s `autolayout.py` for `dot`-grade layout (and its `validate.py` / export if wanted). Check with: `command -v dot` and `ls ~/.claude/skills/*/scripts/autolayout.py`.
+- **Otherwise** → use `--to drawio` (built-in Node layout, zero extra deps).
+
+This is an orchestration rule for *you*, not a code dependency — `cds-erd` stays standalone either way.
+
 ## What it captures
 
 - `key` → PK rows; scalar elements → typed columns (managed `createdAt`/`createdBy`/… filtered out).
